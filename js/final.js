@@ -180,7 +180,9 @@ function cargarCarrito() {
 function actualizarContadorCarrito() {
     const contadorCarrito = document.getElementById('cart-count');
     if (contadorCarrito) {
-        contadorCarrito.textContent = carrito.length;
+        const totalProductos = carrito.length;
+        const totalPrecio = carrito.reduce((total, producto) => total + (producto.precio * producto.cantidad), 0);
+        contadorCarrito.textContent = `${totalProductos} productos - $${totalPrecio.toFixed(2)}`;
     }
 }
 
@@ -193,18 +195,45 @@ function mostrarProductos() {
             const divProducto = document.createElement("div");
             divProducto.classList.add("col-md-4", "mb-4");
 
-            divProducto.innerHTML = `
-                <div class="card">
-                    <img src="${producto.imagen}" alt="${producto.alt}" class="card-img-top" style="cursor: pointer;" onclick="mostrarDetalle(${producto.ID})">
-                    <div class="card-body">
-                        <h3 class="card-title">${producto.nombre}</h3>
-                        <p class="card-text">${producto.descripcion}</p>
-                        <p class="card-text">Precio: $${producto.precio}</p>
-                        <button class="btn btn-primary" onclick="agregarAlCarrito(${producto.ID})">Agregar al carrito</button>
-                    </div>
-                </div>
-            `;
+            const card = document.createElement("div");
+            card.classList.add("card");
 
+            const img = document.createElement("img");
+            img.src = producto.imagen;
+            img.alt = producto.alt;
+            img.classList.add("card-img-top");
+            img.style.cursor = "pointer";
+            img.onclick = () => mostrarDetalle(producto.ID);
+
+            const cardBody = document.createElement("div");
+            cardBody.classList.add("card-body");
+
+            const cardTitle = document.createElement("h3");
+            cardTitle.classList.add("card-title");
+            cardTitle.textContent = producto.nombre;
+
+            const cardTextDesc = document.createElement("p");
+            cardTextDesc.classList.add("card-text");
+            cardTextDesc.textContent = producto.descripcion;
+
+            const cardTextPrice = document.createElement("p");
+            cardTextPrice.classList.add("card-text");
+            cardTextPrice.textContent = `Precio: $${producto.precio}`;
+
+            const button = document.createElement("button");
+            button.classList.add("btn", "btn-primary");
+            button.textContent = "Agregar al carrito";
+            button.onclick = () => agregarAlCarrito(producto.ID);
+
+            cardBody.appendChild(cardTitle);
+            cardBody.appendChild(cardTextDesc);
+            cardBody.appendChild(cardTextPrice);
+            cardBody.appendChild(button);
+
+            card.appendChild(img);
+            card.appendChild(cardBody);
+
+            divProducto.appendChild(card);
             contenedorProductos.appendChild(divProducto);
         });
     }
@@ -216,19 +245,65 @@ window.mostrarDetalle = function(productoID) {
 
     const modal = document.createElement("div");
     modal.classList.add("modal");
-    modal.innerHTML = `
-    <div class="modal-content" style="width: 50%; margin: 50px auto; position: relative;">
-        <button class="close" onclick="cerrarModalDetalle(this)" style="position: absolute; top: 10px; left: 10px; font-size: 24px; cursor: pointer;">&times;</button>
-        <h2 style="text-align: center;">${productoSeleccionado.nombre}</h2>
-        <img src="${productoSeleccionado.imagen}" alt="${productoSeleccionado.alt}" style="width: 200px; height: 200px; display: block; margin: 0 auto;">
-        <p style="text-align: center;">${productoSeleccionado.descripcion}</p>
-        <p style="text-align: center;">Marca: ${productoSeleccionado.marca}</p>
-        <p style="text-align: center;">Fecha de lanzamiento: ${productoSeleccionado.fecha}</p>
-        <p style="text-align: center;">Género: ${productoSeleccionado.genero}</p>
-        <p style="text-align: center;">Precio: $${productoSeleccionado.precio}</p>
-    </div>
-    `;
 
+    const modalContent = document.createElement("div");
+    modalContent.classList.add("modal-content");
+    modalContent.style.width = "50%";
+    modalContent.style.margin = "50px auto";
+    modalContent.style.position = "relative";
+
+    const closeButton = document.createElement("button");
+    closeButton.classList.add("close");
+    closeButton.style.position = "absolute";
+    closeButton.style.top = "10px";
+    closeButton.style.left = "10px";
+    closeButton.style.fontSize = "24px";
+    closeButton.style.cursor = "pointer";
+    closeButton.innerHTML = "&times;";
+    closeButton.onclick = () => cerrarModalDetalle(closeButton);
+
+    const modalTitle = document.createElement("h2");
+    modalTitle.style.textAlign = "center";
+    modalTitle.textContent = productoSeleccionado.nombre;
+
+    const modalImg = document.createElement("img");
+    modalImg.src = productoSeleccionado.imagen;
+    modalImg.alt = productoSeleccionado.alt;
+    modalImg.style.width = "200px";
+    modalImg.style.height = "200px";
+    modalImg.style.display = "block";
+    modalImg.style.margin = "0 auto";
+
+    const modalDesc = document.createElement("p");
+    modalDesc.style.textAlign = "center";
+    modalDesc.textContent = productoSeleccionado.descripcion;
+
+    const modalMarca = document.createElement("p");
+    modalMarca.style.textAlign = "center";
+    modalMarca.textContent = `Marca: ${productoSeleccionado.marca}`;
+
+    const modalFecha = document.createElement("p");
+    modalFecha.style.textAlign = "center";
+    modalFecha.textContent = `Fecha de lanzamiento: ${productoSeleccionado.fecha}`;
+
+    const modalGenero = document.createElement("p");
+    modalGenero.style.textAlign = "center";
+    modalGenero.textContent = `Género: ${productoSeleccionado.genero}`;
+
+    const modalPrecio = document.createElement("p");
+    modalPrecio.style.textAlign = "center";
+    modalPrecio.textContent = `Precio: $${productoSeleccionado.precio}`;
+
+    modalContent.appendChild(closeButton);
+    modalContent.appendChild(modalTitle);
+    modalContent.appendChild(modalImg);
+    modalContent.appendChild(modalDesc);
+    modalContent.appendChild(modalMarca);
+    modalContent.appendChild(modalFecha);
+    modalContent.appendChild(modalGenero);
+    modalContent.appendChild(modalPrecio);
+
+    modal.appendChild(modalContent);
     document.body.appendChild(modal);
 
     modal.style.display = "block";
@@ -369,19 +444,64 @@ function mostrarCarrito() {
         carrito.forEach(producto => {
             const trProducto = document.createElement("tr");
 
-            trProducto.innerHTML = `
-                <td><div class="d-flex align-items-center justify-content-center"><img src="${producto.imagen}" alt="${producto.alt}" class="img-thumbnail" style="width: 50px;"></div></td>
-                <td><div class="d-flex align-items-center justify-content-center">${producto.nombre}</div></td>
-                <td class="quantity-control">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <button class="btn btn-sm btn-secondary btn-circle" onclick="actualizarCantidad(${producto.ID}, -1)">-</button>
-                        <span class="mx-2">${producto.cantidad}</span>
-                        <button class="btn btn-sm btn-secondary btn-circle" onclick="actualizarCantidad(${producto.ID}, 1)">+</button>
-                    </div>
-                </td>
-                <td><div class="d-flex align-items-center justify-content-center">$${(producto.precio * producto.cantidad).toFixed(2)}</div></td>
-                <td><div class="d-flex align-items-center justify-content-center"><button class="btn btn-danger btn-sm" onclick="eliminarDelCarrito(${producto.ID})">Eliminar</button></div></td>
-            `;
+            const tdImg = document.createElement("td");
+            const divImg = document.createElement("div");
+            divImg.classList.add("d-flex", "align-items-center", "justify-content-center");
+            const img = document.createElement("img");
+            img.src = producto.imagen;
+            img.alt = producto.alt;
+            img.classList.add("img-thumbnail");
+            img.style.width = "50px";
+            divImg.appendChild(img);
+            tdImg.appendChild(divImg);
+
+            const tdNombre = document.createElement("td");
+            const divNombre = document.createElement("div");
+            divNombre.classList.add("d-flex", "align-items-center", "justify-content-center");
+            divNombre.textContent = producto.nombre;
+            tdNombre.appendChild(divNombre);
+
+            const tdCantidad = document.createElement("td");
+            tdCantidad.classList.add("quantity-control");
+            const divCantidad = document.createElement("div");
+            divCantidad.classList.add("d-flex", "align-items-center", "justify-content-center");
+            const btnMenos = document.createElement("button");
+            btnMenos.classList.add("btn", "btn-sm", "btn-secondary", "btn-circle");
+            btnMenos.textContent = "-";
+            btnMenos.onclick = () => actualizarCantidad(producto.ID, -1);
+            const spanCantidad = document.createElement("span");
+            spanCantidad.classList.add("mx-2");
+            spanCantidad.textContent = producto.cantidad;
+            const btnMas = document.createElement("button");
+            btnMas.classList.add("btn", "btn-sm", "btn-secondary", "btn-circle");
+            btnMas.textContent = "+";
+            btnMas.onclick = () => actualizarCantidad(producto.ID, 1);
+            divCantidad.appendChild(btnMenos);
+            divCantidad.appendChild(spanCantidad);
+            divCantidad.appendChild(btnMas);
+            tdCantidad.appendChild(divCantidad);
+
+            const tdPrecio = document.createElement("td");
+            const divPrecio = document.createElement("div");
+            divPrecio.classList.add("d-flex", "align-items-center", "justify-content-center");
+            divPrecio.textContent = `$${(producto.precio * producto.cantidad).toFixed(2)}`;
+            tdPrecio.appendChild(divPrecio);
+
+            const tdEliminar = document.createElement("td");
+            const divEliminar = document.createElement("div");
+            divEliminar.classList.add("d-flex", "align-items-center", "justify-content-center");
+            const btnEliminar = document.createElement("button");
+            btnEliminar.classList.add("btn", "btn-danger", "btn-sm");
+            btnEliminar.textContent = "Eliminar";
+            btnEliminar.onclick = () => eliminarDelCarrito(producto.ID);
+            divEliminar.appendChild(btnEliminar);
+            tdEliminar.appendChild(divEliminar);
+
+            trProducto.appendChild(tdImg);
+            trProducto.appendChild(tdNombre);
+            trProducto.appendChild(tdCantidad);
+            trProducto.appendChild(tdPrecio);
+            trProducto.appendChild(tdEliminar);
 
             contenedorCarrito.appendChild(trProducto);
             total += producto.precio * producto.cantidad;
@@ -439,19 +559,71 @@ function filtrarPorGenero(genero) {
             const divProducto = document.createElement("div");
             divProducto.classList.add("col-md-4", "mb-4");
 
-            divProducto.innerHTML = `
-                <div class="card">
-                    <img src="${producto.imagen}" alt="${producto.alt}" class="card-img-top" style="cursor: pointer;" onclick="mostrarDetalle(${producto.ID})">
-                    <div class="card-body">
-                        <h3 class="card-title">${producto.nombre}</h3>
-                        <p class="card-text">${producto.descripcion}</p>
-                        <p class="card-text">Precio: $${producto.precio}</p>
-                        <button class="btn btn-primary" onclick="agregarAlCarrito(${producto.ID})">Agregar al carrito</button>
-                    </div>
-                </div>
-            `;
+            const card = document.createElement("div");
+            card.classList.add("card");
+
+            const img = document.createElement("img");
+            img.src = producto.imagen;
+            img.alt = producto.alt;
+            img.classList.add("card-img-top");
+            img.style.cursor = "pointer";
+            img.onclick = () => mostrarDetalle(producto.ID);
+
+            const cardBody = document.createElement("div");
+            cardBody.classList.add("card-body");
+
+            const cardTitle = document.createElement("h3");
+            cardTitle.classList.add("card-title");
+            cardTitle.textContent = producto.nombre;
+
+            const cardTextDesc = document.createElement("p");
+            cardTextDesc.classList.add("card-text");
+            cardTextDesc.textContent = producto.descripcion;
+
+            const cardTextPrice = document.createElement("p");
+            cardTextPrice.classList.add("card-text");
+            cardTextPrice.textContent = `Precio: $${producto.precio}`;
+
+            const button = document.createElement("button");
+            button.classList.add("btn", "btn-primary");
+            button.textContent = "Agregar al carrito";
+            button.onclick = () => agregarAlCarrito(producto.ID);
+
+            cardBody.appendChild(cardTitle);
+            cardBody.appendChild(cardTextDesc);
+            cardBody.appendChild(cardTextPrice);
+            cardBody.appendChild(button);
+
+            card.appendChild(img);
+            card.appendChild(cardBody);
+
+            divProducto.appendChild(card);
             contenedorProductos.appendChild(divProducto);
         });
+
+    // Mostrar oferta especial en todas las categorías
+    mostrarOfertaEspecial();
+}
+
+// Función para mostrar la oferta especial
+function mostrarOfertaEspecial() {
+    const ofertaBanner = document.createElement("div");
+    ofertaBanner.classList.add("oferta-banner");
+    ofertaBanner.textContent = "¡Oferta en Perfumes para niños! ¡No te los pierdas!";
+    ofertaBanner.style.position = "fixed";
+    ofertaBanner.style.top = "10px";
+    ofertaBanner.style.left = "50%";
+    ofertaBanner.style.transform = "translateX(-50%)";
+    ofertaBanner.style.backgroundColor = "yellow";
+    ofertaBanner.style.padding = "10px";
+    ofertaBanner.style.border = "2px solid black";
+    ofertaBanner.style.zIndex = "1000";
+
+    document.body.appendChild(ofertaBanner);
+
+    setTimeout(() => {
+        document.body.removeChild(ofertaBanner);
+    }, 10000);
 }
 
 // Mostrar productos al cargar la página
